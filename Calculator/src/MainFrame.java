@@ -3,7 +3,7 @@ import javax.swing.*;
 import java.awt.event.*;
 import javax.swing.border.EmptyBorder;
 
-public class MainFrame extends JFrame {
+public class Main extends JFrame {
 
 	JFrame frame;
 	private JTextField textField;
