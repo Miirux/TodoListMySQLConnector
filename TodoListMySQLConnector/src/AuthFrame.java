@@ -91,8 +91,9 @@ public class AuthFrame extends JFrame {
 
                     if (resultSet.next()) {
                         String userType = resultSet.getString("Type");
+                        int userId = resultSet.getInt("id");
                         if ("client".equals(userType)) {
-                            ClientFrame clientFrame = new ClientFrame();
+                            ClientFrame clientFrame = new ClientFrame(userId);
                         } else if ("admin".equals(userType)) {
                             AdminFrame adminFrame = new AdminFrame();
                         }

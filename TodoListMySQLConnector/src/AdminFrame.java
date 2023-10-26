@@ -10,12 +10,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class AdminFrame extends JFrame {
-    private DefaultTableModel userModel;
+    private static DefaultTableModel userModel;
     private JTable userTable;
     
-    private final String DB_URL = "jdbc:mysql://localhost:3306/todolist";
-    private final String DB_USER = "root";
-    private final String DB_PASSWORD = "";
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/todolist";
+    private static final String DB_USER = "root";
+    private static final String DB_PASSWORD = "";
 
     public AdminFrame() {
         setTitle("Admin Dashboard");
@@ -66,6 +66,7 @@ public class AdminFrame extends JFrame {
         contentPane.add(tableScrollPane, BorderLayout.CENTER);
         contentPane.add(buttonPanel, BorderLayout.SOUTH);
         
+        FetchAndDisplayUserData();
         setVisible(true);
 
         addButton.addActionListener(new ActionListener() {
@@ -73,9 +74,6 @@ public class AdminFrame extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 AddUserFrame addUserFrame = new AddUserFrame();
                 addUserFrame.setVisible(true);
-                
-                userModel.setRowCount(0);
-                FetchAndDisplayUserData();
             }
         });
 
@@ -83,8 +81,10 @@ public class AdminFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = userTable.getSelectedRow();
+                String email = userModel.getValueAt(selectedRow, 1).toString();
                 if (selectedRow >= 0) {
-                    // edit function
+                    EditUserFrame frame = new EditUserFrame(email);
+                    frame.setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(AdminFrame.this, "Select a user to edit.");
                 }
@@ -106,10 +106,14 @@ public class AdminFrame extends JFrame {
             Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM Account WHERE Email= ?");
             preparedStatement.setString(1, email);
-            int rowsAffected = preparedStatement.executeUpdate();
+            PreparedStatement preparedStatement2 = connection.prepareStatement("DELETE FROM todoitem WHERE idAccount = (SELECT id FROM account WHERE Email = ?)");
+            preparedStatement2.setString(1, email);
+            int rowsAffected = preparedStatement2.executeUpdate();
+            rowsAffected = preparedStatement.executeUpdate();
 
             preparedStatement.close();
-
+            preparedStatement2.close();
+            
             return rowsAffected > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -120,8 +124,9 @@ public class AdminFrame extends JFrame {
         }
     }
     
-    private void FetchAndDisplayUserData() {
+    public static void FetchAndDisplayUserData() {
     	try {
+    		userModel.setRowCount(0);
         	Class.forName("com.mysql.cj.jdbc.Driver");
             Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
             PreparedStatement preparedStatement = connection.prepareStatement("SELECT FullName,Email,Type from Account");
@@ -140,9 +145,9 @@ public class AdminFrame extends JFrame {
             preparedStatement.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Failed to retrieve user data.");
+            JOptionPane.showMessageDialog(null, "Failed to retrieve user data.");
         }catch(Exception ex) {
-        	JOptionPane.showMessageDialog(this, "An error has occured.");
+        	JOptionPane.showMessageDialog(null, "An error has occured.");
         }
     }
 }

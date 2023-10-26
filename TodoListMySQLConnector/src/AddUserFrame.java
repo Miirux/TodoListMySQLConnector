@@ -71,6 +71,8 @@ public class AddUserFrame extends JFrame {
                     int rowsInserted = preparedStatement.executeUpdate();
                     if (rowsInserted > 0) {
                         JOptionPane.showMessageDialog(AddUserFrame.this, "User added successfully.");
+                        
+                        AdminFrame.FetchAndDisplayUserData();
                         dispose();
                     } else {
                         JOptionPane.showMessageDialog(AddUserFrame.this, "Failed to add user.");
