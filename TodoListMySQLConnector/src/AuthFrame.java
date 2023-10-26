@@ -79,10 +79,9 @@ public class AuthFrame extends JFrame {
                 String password = new String(passwordField.getPassword());
 
                 try {
-                    Class.forName("com.mysql.cj.jdbc.Driver"); // Load the MySQL JDBC driver
-
+                    Class.forName("com.mysql.cj.jdbc.Driver");
                     Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                    String query = "SELECT * FROM users WHERE email = ? AND password = ?";
+                    String query = "SELECT * FROM Account WHERE Email = ? AND Password = ?";
                     PreparedStatement preparedStatement = connection.prepareStatement(query);
 
                     preparedStatement.setString(1, email);
@@ -91,11 +90,11 @@ public class AuthFrame extends JFrame {
                     ResultSet resultSet = preparedStatement.executeQuery();
 
                     if (resultSet.next()) {
-                        String userType = resultSet.getString("type");
+                        String userType = resultSet.getString("Type");
                         if ("client".equals(userType)) {
-                            //ClientFrame clientFrame = new ClientFrame();
+                            ClientFrame clientFrame = new ClientFrame();
                         } else if ("admin".equals(userType)) {
-                            //AdminFrame adminFrame = new AdminFrame();
+                            AdminFrame adminFrame = new AdminFrame();
                         }
                         dispose();
                     } else {
