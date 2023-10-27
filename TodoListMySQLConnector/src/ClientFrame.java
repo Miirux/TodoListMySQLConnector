@@ -94,15 +94,25 @@ public class ClientFrame extends JFrame {
         removeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Remove selected to-do item
-            }
+            	int selectedRow = todoTable.getSelectedRow();
+                if (selectedRow >= 0) {
+                    String title = todoModel.getValueAt(selectedRow, 0).toString();
+                    todoModel.removeRow(selectedRow);
+                    if (deleteTodoItemFromDatabase(title)) {
+                        JOptionPane.showMessageDialog(ClientFrame.this, "Todo item removed.");
+                    } else {
+                        JOptionPane.showMessageDialog(ClientFrame.this, "Failed to remove the todo item.");
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(ClientFrame.this, "Select a todo item to remove.");
+                }            }
         });
 
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String searchTitle = searchField.getText();
-                // Search for to-do items based on the title
+            	String searchTitle = searchField.getText();
+                searchTodoItems(userId, searchTitle);
             }
         });
     }
@@ -136,6 +146,58 @@ public class ClientFrame extends JFrame {
         }catch(Exception ex) {
         	ex.printStackTrace();
             JOptionPane.showMessageDialog(null, "An error has occured.");
+        }
+    }
+    
+    private boolean deleteTodoItemFromDatabase(String title) {
+        try {
+        	Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM todoitem WHERE title= ?");
+            preparedStatement.setString(1, title);
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            preparedStatement.close();
+            
+            return rowsAffected > 0;
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            return false;
+        }catch(Exception ex) {
+        	JOptionPane.showMessageDialog(this, "An error has occured.");
+        	return false;
+        }
+    }
+    
+    private void searchTodoItems(int userId, String searchTitle) {
+        try {
+        	Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+            String selectQuery = "SELECT title, description FROM todoitem WHERE idAccount = ? AND title LIKE ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(selectQuery);
+            preparedStatement.setInt(1, userId);
+            preparedStatement.setString(2, "%" + searchTitle + "%");
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            DefaultTableModel todoModel = (DefaultTableModel) todoTable.getModel();
+            todoModel.setRowCount(0);
+
+            while (resultSet.next()) {
+                String title = resultSet.getString("title");
+                String description = resultSet.getString("description");
+                todoModel.addRow(new Object[]{title, description});
+            }
+
+            resultSet.close();
+            preparedStatement.close();
+            connection.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(ClientFrame.this, "Database connection error.");
+        }catch(Exception ex) {
+        	ex.printStackTrace();
+            JOptionPane.showMessageDialog(ClientFrame.this, "An error has occured.");
         }
     }
 
